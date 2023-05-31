@@ -1,6 +1,6 @@
 {
   "name": "vue-d3-charts",
-  "version": "0.2.8",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/vue-d3-charts.ssr.js",
   "browser": "dist/vue-d3-charts.esm.js",
@@ -12,7 +12,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Saigesp/vue-d3-charts.git"
+    "url": "https://github.com/stereoweb/vue-d3-charts.git"
   },
   "scripts": {
     "build": "cross-env NODE_ENV=production rollup --config build/rollup.config.js",
@@ -47,11 +47,11 @@
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-terser": "^5.1.3",
     "rollup-plugin-vue": "^5.1.5",
-    "vue": "^2.6.10",
-    "vue-template-compiler": "^2.6.10"
+    "vue": "^3.0.0",
+    "vue-template-compiler": "^3.0.0"
   },
   "peerDependencies": {
-    "vue": "^2.6.10"
+    "vue": "^3.0.0"
   },
   "engines": {
     "node": ">=8"
