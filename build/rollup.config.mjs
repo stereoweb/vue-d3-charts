@@ -1,15 +1,14 @@
-// rollup.config.js
 import fs from 'fs';
 import path from 'path';
-import vue from 'rollup-plugin-vue';
+import { defineConfig } from 'rollup';
+import vue from '@vitejs/plugin-vue';
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
-import babel from 'rollup-plugin-babel';
-import { terser } from 'rollup-plugin-terser';
+import babel from '@rollup/plugin-babel';
+import { terser } from 'rollup-plugin-minification';
 import minimist from 'minimist';
 
-// Get browserslist config and remove ie from es build targets
 const esbrowserslist = fs.readFileSync('./.browserslistrc')
   .toString()
   .split('\n')
@@ -21,63 +20,41 @@ const projectRoot = path.resolve(__dirname, '..');
 
 const baseConfig = {
   input: 'src/entry.js',
-  plugins: {
-    preVue: [
-      replace({
-        'process.env.NODE_ENV': JSON.stringify('production'),
-      }),
-      alias({
-        resolve: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
-        entries: {
-          '@': path.resolve(projectRoot, 'src'),
-        },
-      }),
-    ],
-    vue: {
-      css: true,
-      template: {
-        isProduction: true,
+  plugins: [
+    replace({
+      'process.env.NODE_ENV': JSON.stringify('production'),
+    }),
+    alias({
+      resolve: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
+      entries: {
+        '@': path.resolve(projectRoot, 'src'),
       },
-    },
-    babel: {
-      exclude: 'node_modules/**',
-      extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
-    },
-  },
+    }),
+  ],
 };
 
-// ESM/UMD/IIFE shared settings: externals
-// Refer to https://rollupjs.org/guide/en/#warning-treating-module-as-external-dependency
-const external = [
-  // list external dependencies, exactly the way it is written in the import statement.
-  // eg. 'jquery'
-  'vue',
-];
+const external = ['vue'];
 
-// UMD/IIFE shared settings: output.globals
-// Refer to https://rollupjs.org/guide/en#output-globals for details
 const globals = {
-  // Provide global variable names to replace your external imports
-  // eg. jquery: '$'
   vue: 'Vue',
 };
 
-// Customize configs for individual targets
 const buildFormats = [];
 if (!argv.format || argv.format === 'es') {
-  const esConfig = {
+  const esConfig = defineConfig({
     ...baseConfig,
     external,
     output: {
       file: 'dist/vue-d3-charts.esm.js',
-      format: 'esm',
+      format: 'es',
       exports: 'named',
     },
     plugins: [
-      ...baseConfig.plugins.preVue,
-      vue(baseConfig.plugins.vue),
+      ...baseConfig.plugins,
+      vue(),
       babel({
-        ...baseConfig.plugins.babel,
+        exclude: 'node_modules/**',
+        extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
         presets: [
           [
             '@babel/preset-env',
@@ -89,12 +66,12 @@ if (!argv.format || argv.format === 'es') {
       }),
       commonjs(),
     ],
-  };
+  });
   buildFormats.push(esConfig);
 }
 
 if (!argv.format || argv.format === 'cjs') {
-  const umdConfig = {
+  const umdConfig = defineConfig({
     ...baseConfig,
     external,
     output: {
@@ -106,23 +83,19 @@ if (!argv.format || argv.format === 'cjs') {
       globals,
     },
     plugins: [
-      ...baseConfig.plugins.preVue,
+      ...baseConfig.plugins,
       vue({
-        ...baseConfig.plugins.vue,
-        template: {
-          ...baseConfig.plugins.vue.template,
-          optimizeSSR: true,
-        },
+        optimizeSSR: true,
       }),
       babel(baseConfig.plugins.babel),
       commonjs(),
     ],
-  };
+  });
   buildFormats.push(umdConfig);
 }
 
 if (!argv.format || argv.format === 'iife') {
-  const unpkgConfig = {
+  const unpkgConfig = defineConfig({
     ...baseConfig,
     external,
     output: {
@@ -134,8 +107,8 @@ if (!argv.format || argv.format === 'iife') {
       globals,
     },
     plugins: [
-      ...baseConfig.plugins.preVue,
-      vue(baseConfig.plugins.vue),
+      ...baseConfig.plugins,
+      vue(),
       babel(baseConfig.plugins.babel),
       commonjs(),
       terser({
@@ -144,9 +117,8 @@ if (!argv.format || argv.format === 'iife') {
         },
       }),
     ],
-  };
+  });
   buildFormats.push(unpkgConfig);
 }
 
-// Export config
 export default buildFormats;
